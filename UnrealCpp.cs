@@ -545,7 +545,11 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             cppStruct.IsClass = true;
 
         foreach (CppField cField in cppStruct.Fields)
+        {
+            if (cField.Name == "2")
+                Console.WriteLine();
             cField.Type = ToLangType(cField.Type, true);
+        }
 
         foreach (CppFunction cppFunc in cppStruct.Methods)
         {
