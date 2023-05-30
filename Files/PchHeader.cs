@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using CG.Framework.Helper;
-using CG.Framework.Plugin.Output;
+using CG.SDK.Dotnet.Helper;
+using CG.SDK.Dotnet.Plugin.Output;
 
 namespace CG.Output.UnrealCpp.Files;
 
@@ -15,12 +15,12 @@ public class PchHeader : IncludeFile<UnrealCpp>
     {
     }
 
-    public override ValueTask<string> ProcessAsync(OutputProps processProps)
+    public override ValueTask<string> ProcessAsync(OutputPurpose processPurpose)
     {
         if (Lang.SdkFile is null)
             throw new InvalidOperationException("Invalid output target.");
 
         // Read File
-        return CGUtils.ReadEmbeddedFileAsync(Path.Combine("Internal", FileName), this.GetType().Assembly);
+        return CGUtils.ReadEmbeddedFileAsync(Path.Combine("Internal", FileName), GetType().Assembly);
     }
 }

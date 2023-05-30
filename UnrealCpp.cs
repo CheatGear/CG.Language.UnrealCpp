@@ -5,15 +5,16 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CG.Framework.Attributes;
-using CG.Framework.Engines;
-using CG.Framework.Engines.Models;
-using CG.Framework.Engines.Unreal;
-using CG.Framework.Helper;
-using CG.Framework.Helper.IO;
-using CG.Framework.Plugin.Output;
 using CG.Output.UnrealCpp.Files;
 using CG.Output.UnrealCpp.Helper;
+using CG.SDK.Dotnet.Attributes;
+using CG.SDK.Dotnet.Engine;
+using CG.SDK.Dotnet.Engine.Models;
+using CG.SDK.Dotnet.Engine.Unreal;
+using CG.SDK.Dotnet.Helper;
+using CG.SDK.Dotnet.Helper.IO;
+using CG.SDK.Dotnet.Plugin;
+using CG.SDK.Dotnet.Plugin.Output;
 using LangPrint;
 using LangPrint.Cpp;
 
@@ -40,103 +41,55 @@ internal enum CppOptions
     /// </summary>
     ShouldXorStrings,
 
-    XorFuncName,
+    XorFuncName
 }
 
-[PluginInfo("CorrM", "Unreal Cpp", "Add Cpp syntax support for UnrealEngine", "https://github.com/CheatGear", "https://github.com/CheatGear/Output.UnrealCpp")]
+[PluginInfo(Name = nameof(UnrealCpp), Version = "5.0.0", Author = "CorrM", Description = "Add Cpp syntax support for UnrealEngine", WebsiteLink = "https://github.com/CheatGear", SourceCodeLink = "https://github.com/CheatGear/Output.UnrealCpp")]
 public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 {
     private readonly CppProcessor _cppProcessor;
 
     protected override Dictionary<string, string> LangTypes { get; } = new()
     {
-        { "int64", "int64_t" },
-        { "int32", "int32_t" },
-        { "int16", "int16_t" },
-        { "int8", "int8_t" },
+        {
+            "int64", "int64_t"
+        },
+        {
+            "int32", "int32_t"
+        },
+        {
+            "int16", "int16_t"
+        },
+        {
+            "int8", "int8_t"
+        },
 
-        { "uint64", "uint64_t" },
-        { "uint32", "uint32_t" },
-        { "uint16", "uint16_t" },
-        { "uint8", "uint8_t" }
+        {
+            "uint64", "uint64_t"
+        },
+        {
+            "uint32", "uint32_t"
+        },
+        {
+            "uint16", "uint16_t"
+        },
+        {
+            "uint8", "uint8_t"
+        }
     };
 
     internal List<EngineClass> SavedClasses { get; }
     internal List<EngineStruct> SavedStructs { get; }
 
-    public override Version TargetFrameworkVersion { get; }
-    public override Version PluginVersion { get; }
+    public override PluginKind PluginType => PluginKind.OutputSupport;
 
     public override string OutputName => "Cpp";
-    public override EngineType SupportedEngines => EngineType.UnrealEngine;
-    public override OutputProps SupportedProps => OutputProps.Internal /* | OutputProps.External*/;
 
-    public override IReadOnlyDictionary<Enum, OutputOption> Options { get; } = new Dictionary<Enum, OutputOption>()
-    {
-        {
-            CppOptions.PrecompileSyntax,
-            new OutputOption(
-                "Precompile Syntax",
-                OutputOptionType.CheckBox,
-                "Use precompile headers for most build speed",
-                "true"
-            )
-        },
-        {
-            CppOptions.OffsetsOnly,
-            new OutputOption(
-                "Offsets Only",
-                OutputOptionType.CheckBox,
-                "Only dump offsets in sdk",
-                "false"
-            )
-        },
-        {
-            CppOptions.LazyFindObject,
-            new OutputOption(
-                "Lazy Find Object",
-                OutputOptionType.CheckBox,
-                "Lazy assign for UObject::FindObject in SDK methods body",
-                "true"
-            )
-        },
-        {
-            CppOptions.GenerateParametersFile,
-            new OutputOption(
-                "Generate Parameters File",
-                OutputOptionType.CheckBox,
-                "Should generate function parameters file",
-                "true"
-            )
-        },
-        {
-            CppOptions.ShouldUseStrings,
-            new OutputOption(
-                "Should Use Strings",
-                OutputOptionType.CheckBox,
-                "Use string to catch function instead if use it's object index",
-                "true"
-            )
-        },
-        {
-            CppOptions.ShouldXorStrings,
-            new OutputOption(
-                "Should Xor Strings",
-                OutputOptionType.CheckBox,
-                "Use XOR string to handle functions name",
-                "false"
-            )
-        },
-        {
-            CppOptions.XorFuncName,
-            new OutputOption(
-                "Xor Func Name",
-                OutputOptionType.TextBox,
-                "XOR function name",
-                "_xor_"
-            )
-        },
-    };
+    public override GameEngine SupportedEngines => GameEngine.Unreal;
+
+    public override OutputPurpose SupportedPurpose => OutputPurpose.Internal /* | OutputProps.External*/;
+
+    public override IReadOnlyDictionary<Enum, OutputOption> Options { get; }
 
     public UnrealCpp()
     {
@@ -144,8 +97,65 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
         SavedClasses = new List<EngineClass>();
         SavedStructs = new List<EngineStruct>();
-        TargetFrameworkVersion = new Version(3, 0, 0);
-        PluginVersion = new Version(3, 0, 0);
+        Options = new Dictionary<Enum, OutputOption>()
+        {
+            {
+                CppOptions.PrecompileSyntax, new OutputOption(
+                    "Precompile Syntax",
+                    OutputOptionType.CheckBox,
+                    "Use precompile headers for most build speed",
+                    "true"
+                )
+            },
+            {
+                CppOptions.OffsetsOnly, new OutputOption(
+                    "Offsets Only",
+                    OutputOptionType.CheckBox,
+                    "Only dump offsets in sdk",
+                    "false"
+                )
+            },
+            {
+                CppOptions.LazyFindObject, new OutputOption(
+                    "Lazy Find Object",
+                    OutputOptionType.CheckBox,
+                    "Lazy assign for UObject::FindObject in SDK methods body",
+                    "true"
+                )
+            },
+            {
+                CppOptions.GenerateParametersFile, new OutputOption(
+                    "Generate Parameters File",
+                    OutputOptionType.CheckBox,
+                    "Should generate function parameters file",
+                    "true"
+                )
+            },
+            {
+                CppOptions.ShouldUseStrings, new OutputOption(
+                    "Should Use Strings",
+                    OutputOptionType.CheckBox,
+                    "Use string to catch function instead if use it's object index",
+                    "true"
+                )
+            },
+            {
+                CppOptions.ShouldXorStrings, new OutputOption(
+                    "Should Xor Strings",
+                    OutputOptionType.CheckBox,
+                    "Use XOR string to handle functions name",
+                    "false"
+                )
+            },
+            {
+                CppOptions.XorFuncName, new OutputOption(
+                    "Xor Func Name",
+                    OutputOptionType.TextBox,
+                    "XOR function name",
+                    "_xor_"
+                )
+            }
+        };
     }
 
     private static List<string> GenerateMethodConditions()
@@ -189,7 +199,10 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             {
                 Name = $"{@class.NameCpp}_{func.Name}_Params",
                 IsClass = false,
-                Comments = new List<string>() { func.FullName }
+                Comments = new List<string>()
+                {
+                    func.FullName
+                }
             };
 
             foreach (EngineParameter param in func.Parameters)
@@ -276,7 +289,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
                 foreach (EngineParameter param in function.Parameters)
                 {
-                    if (param.IsReturn || (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char"))
+                    if (param.IsReturn || param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")
                         continue;
 
                     body.Add($"\t{param.Type,-50} {param.Name};");
@@ -306,9 +319,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             body.Add("auto flags = fn->FunctionFlags;");
 
             if (function.IsNative)
-                body.Add($"fn->FunctionFlags |= 0x{UnrealFunctionFlags.UE4Native:X};");
+                body.Add($"fn->FunctionFlags |= 0x00000400; // Native");
 
-            if (function.IsStatic && !SdkFile.ShouldConvertStaticMethods)
+            if (function.IsStatic && !SdkFile!.ShouldConvertStaticMethods)
             {
                 string prefix;
                 if (Options[CppOptions.LazyFindObject].Value == "true")
@@ -504,7 +517,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             CppFunction? initFunc = cppPackage.Functions.Find(cf => cf.Name == "InitSdk" && cf.Params.Count == 0);
             if (initFunc is not null)
             {
-                for (var i = 0; i < initFunc.Body.Count; i++)
+                for (int i = 0; i < initFunc.Body.Count; i++)
                 {
                     string s = initFunc.Body[i]
                         .Replace("MODULE_NAME", SdkFile.GameModule)
@@ -609,9 +622,16 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             Name = enginePackage.Name,
             BeforeNameSpace = $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(push, 0x{SdkFile.GlobalMemberAlignment:X2}){Environment.NewLine}#endif",
             AfterNameSpace = $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(pop){Environment.NewLine}#endif",
-            HeadingComment = new List<string>() { $"Name: {SdkFile.GameName}", $"Version: {SdkFile.GameVersion}" },
+            HeadingComment = new List<string>()
+            {
+                $"Name: {SdkFile.GameName}",
+                $"Version: {SdkFile.GameVersion}"
+            },
             NameSpace = SdkFile.Namespace,
-            Pragmas = new List<string>() { "once" },
+            Pragmas = new List<string>()
+            {
+                "once"
+            },
             Defines = GetDefines(enginePackage).ToList(),
             Functions = GetFunctions(enginePackage).ToList(),
             Constants = GetConstants(enginePackage).ToList(),
@@ -654,18 +674,18 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     /// <summary>
     /// Process local files that needed to be included
     /// </summary>
-    /// <param name="processProps">Process props</param>
-    private async ValueTask<Dictionary<string, string>> GenerateIncludesAsync(OutputProps processProps)
+    /// <param name="processPurpose">Process props</param>
+    private async ValueTask<Dictionary<string, string>> GenerateIncludesAsync(OutputPurpose processPurpose)
     {
         var ret = new Dictionary<string, string>();
 
-        if (processProps == OutputProps.External)
+        if (processPurpose == OutputPurpose.External)
         {
             var mmHeader = new MemManagerHeader(this);
             var mmCpp = new MemManagerCpp(this);
 
-            ValueTask<string> taskMmHeader = mmHeader.ProcessAsync(processProps);
-            ValueTask<string> taskMmCpp = mmCpp.ProcessAsync(processProps);
+            ValueTask<string> taskMmHeader = mmHeader.ProcessAsync(processPurpose);
+            ValueTask<string> taskMmCpp = mmCpp.ProcessAsync(processPurpose);
 
             ret.Add(mmHeader.FileName, await taskMmHeader.ConfigureAwait(false));
             ret.Add(mmCpp.FileName, await taskMmCpp.ConfigureAwait(false));
@@ -675,7 +695,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         if (Options[CppOptions.PrecompileSyntax].Value == "true")
         {
             var pchHeader = new PchHeader(this);
-            ret.Add(pchHeader.FileName, await pchHeader.ProcessAsync(processProps).ConfigureAwait(false));
+            ret.Add(pchHeader.FileName, await pchHeader.ProcessAsync(processPurpose).ConfigureAwait(false));
         }
 
         return ret;
@@ -768,7 +788,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         {
             // # Unzip UnitTests
             const string unitTestsZipName = "UnitTestsProject.zip";
-            await using (Stream embeddedUnitTests = CGUtils.GetEmbeddedFileAsync(unitTestsZipName, this.GetType().Assembly))
+            await using (Stream embeddedUnitTests = CGUtils.GetEmbeddedFileAsync(unitTestsZipName, GetType().Assembly))
             {
                 if (!Directory.Exists(unitTestsPath))
                     Directory.CreateDirectory(unitTestsPath);
@@ -811,7 +831,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         {
             // # Unzip game project
             const string gameZipName = "GameProject.zip";
-            await using (Stream embeddedGameProj = CGUtils.GetEmbeddedFileAsync(gameZipName, this.GetType().Assembly))
+            await using (Stream embeddedGameProj = CGUtils.GetEmbeddedFileAsync(gameZipName, GetType().Assembly))
             {
                 if (!Directory.Exists(gameProjPath))
                     Directory.CreateDirectory(gameProjPath);
@@ -853,11 +873,11 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         return (gameProjPath, unitTestsPath);
     }
 
-    private async ValueTask<string> GenerateSdkHeaderFile(string gameProjDir, OutputProps processProps)
+    private async ValueTask<string> GenerateSdkHeaderFile(string gameProjDir, OutputPurpose processPurpose)
     {
         // Packages generator [ Should be first task ]
         int packCount = 0;
-        foreach (UnrealPackage pack in SdkFile.Packages)
+        foreach (IUnrealPackage pack in SdkFile.Packages)
         {
             foreach ((string fName, string fContent) in await GeneratePackageFilesAsync(pack).ConfigureAwait(false))
                 await FileManager.WriteAsync(gameProjDir, fName, fContent).ConfigureAwait(false);
@@ -893,7 +913,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         builder.AppendLine("#include <Windows.h>");
 
         // Includes
-        foreach ((string fName, string fContent) in await GenerateIncludesAsync(processProps).ConfigureAwait(false))
+        foreach ((string fName, string fContent) in await GenerateIncludesAsync(processPurpose).ConfigureAwait(false))
         {
             await FileManager.WriteAsync(gameProjDir, fName, fContent).ConfigureAwait(false);
 
@@ -966,7 +986,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         PackageSorter.SortStructsClassesInPackages(SdkFile.Packages);
 
         // Add predefined methods
-        foreach (IEnginePackage pack in SdkFile.Packages.Where(p => !p.IsPredefined))
+        foreach (IUnrealPackage pack in SdkFile.Packages.Where(p => !p.IsPredefined))
         {
             foreach (EngineStruct @struct in pack.Structs)
                 AddPredefinedMethodsToStruct(@struct);
@@ -978,17 +998,17 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         return ValueTask.CompletedTask;
     }
 
-    public override async ValueTask StartAsync(string saveDirPath, OutputProps processProps)
+    public override async ValueTask SaveAsync(string saveDirPath, OutputPurpose processPurpose)
     {
         (string gameDir, string testsDir) = await GenerateSolution(saveDirPath).ConfigureAwait(false);
 
         // Sdk.h
-        string sdkHeader = await GenerateSdkHeaderFile(gameDir, processProps).ConfigureAwait(false);
+        string sdkHeader = await GenerateSdkHeaderFile(gameDir, processPurpose).ConfigureAwait(false);
         await FileManager.WriteAsync(gameDir, "SDK.h", sdkHeader).ConfigureAwait(false);
 
         // UnitTests file
         var unitTestCpp = new UnitTest(this);
-        string testsStr = await unitTestCpp.ProcessAsync(processProps).ConfigureAwait(false);
+        string testsStr = await unitTestCpp.ProcessAsync(processPurpose).ConfigureAwait(false);
         await FileManager.WriteAsync(testsDir, unitTestCpp.FileName, testsStr).ConfigureAwait(false);
     }
 }
