@@ -51,31 +51,15 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
     protected override Dictionary<string, string> LangTypes { get; } = new()
     {
-        {
-            "int64", "int64_t"
-        },
-        {
-            "int32", "int32_t"
-        },
-        {
-            "int16", "int16_t"
-        },
-        {
-            "int8", "int8_t"
-        },
+        { "int64", "int64_t" },
+        { "int32", "int32_t" },
+        { "int16", "int16_t" },
+        { "int8", "int8_t" },
 
-        {
-            "uint64", "uint64_t"
-        },
-        {
-            "uint32", "uint32_t"
-        },
-        {
-            "uint16", "uint16_t"
-        },
-        {
-            "uint8", "uint8_t"
-        }
+        { "uint64", "uint64_t" },
+        { "uint32", "uint32_t" },
+        { "uint16", "uint16_t" },
+        { "uint8", "uint8_t" }
     };
 
     internal List<EngineClass> SavedClasses { get; }
@@ -289,7 +273,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
                 foreach (EngineParameter param in function.Parameters)
                 {
-                    if (param.IsReturn || param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")
+                    if (param.IsReturn && param.Type == "void" /* || (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")*/)
                         continue;
 
                     body.Add($"\t{param.Type,-50} {param.Name};");
@@ -298,17 +282,13 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 body.Add("} params;");
             }
 
-            List<EngineParameter> defaultParams = function.Parameters.Where(p => p.IsDefault).ToList();
-            if (defaultParams.Count > 0)
+            foreach (EngineParameter param in function.Parameters.Where(p => p.IsDefault))
             {
-                foreach (EngineParameter param in defaultParams)
-                {
-                    // Not needed
-                    if (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")
-                        continue;
+                // Not needed
+                if (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")
+                    continue;
 
-                    body.Add($"params.{param.Name} = {param.Name};");
-                }
+                body.Add($"params.{param.Name} = {param.Name};");
             }
 
             body.Add("");
@@ -402,7 +382,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                     new()
                     {
                         ParamKind = FuncParameterKind.Return,
-                        Type = "UClass*"
+                        Type = "UClass*",
+                        Name = "ReturnValue",
+                        FlagsString = ""
                     }
                 }
             };

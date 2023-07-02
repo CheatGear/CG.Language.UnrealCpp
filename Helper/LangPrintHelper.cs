@@ -131,7 +131,7 @@ public static class LangPrintHelper
     internal static CppFunction ToCpp(this EngineFunction func)
     {
         List<EngineParameter> @params = func.Parameters
-            .Where(p => !p.IsReturn && !(p.Name.StartsWith("UnknownData_") && p.Type == "unsigned char"))
+            .Where(p => !(p.Name.StartsWith("UnknownData_") && p.Type == "unsigned char"))
             .ToList();
 
         List<string> comments;
@@ -150,15 +150,17 @@ public static class LangPrintHelper
             };
 
             if (@params.Count > 0)
+            {
                 comments.Add("Parameters:");
 
-            foreach (EngineParameter param in @params)
-            {
-                string comment = string.IsNullOrWhiteSpace(param.FlagsString)
-                    ? $"\t\t{param.Type,-50} {param.Name}"
-                    : $"\t\t{param.Type,-50} {param.Name,-58} ({param.FlagsString})";
+                foreach (EngineParameter param in @params)
+                {
+                    string comment = string.IsNullOrWhiteSpace(param.FlagsString)
+                        ? $"\t\t{param.Type,-50} {param.Name}"
+                        : $"\t\t{param.Type,-50} {param.Name,-58} ({param.FlagsString})";
 
-                comments.Add(comment);
+                    comments.Add(comment);
+                }
             }
         }
 
@@ -168,10 +170,10 @@ public static class LangPrintHelper
 
         return new CppFunction()
         {
-            Name = func.Name,
-            Type = func.Parameters.First(p => p.IsReturn).Type,
             TemplateParams = func.TemplateParams,
-            Params = @params.Select(ep => ep.ToCpp()).ToList(),
+            Type = func.Parameters.First(p => p.IsReturn).Type,
+            Name = func.Name,
+            Params = @params.Where(ep => !ep.IsReturn).Select(ep => ep.ToCpp()).ToList(),
             Body = func.Body,
             Private = func.IsPrivate,
             Static = isStatic,
