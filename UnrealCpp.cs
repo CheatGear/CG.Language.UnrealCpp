@@ -968,7 +968,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         PackageSorter.SortStructsClassesInPackages(SdkFile.Packages);
 
         // Add predefined methods
-        foreach (IUnrealPackage pack in SdkFile.Packages.Where(p => !p.IsPredefined))
+        foreach (UnrealPackage pack in SdkFile.Packages.Where(p => !p.IsPredefined))
         {
             foreach (EngineStruct @struct in pack.Structs)
                 AddPredefinedMethodsToStruct(@struct);
