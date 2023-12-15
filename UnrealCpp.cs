@@ -73,7 +73,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
     public override OutputPurpose SupportedPurpose => OutputPurpose.Internal /* | OutputProps.External*/;
 
-    public override IReadOnlyDictionary<Enum, OutputOption> Options { get; }
+    public override Dictionary<Enum, OutputOption> Options { get; }
 
     public UnrealCpp()
     {
@@ -583,6 +583,13 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     private async ValueTask<Dictionary<string, string>> GeneratePackageFilesAsync(IEnginePackage enginePackage)
     {
         await ValueTask.CompletedTask.ConfigureAwait(false);
+
+        Options[CppOptions.PrecompileSyntax].SetValue("true");
+        Options[CppOptions.OffsetsOnly].SetValue("false");
+        Options[CppOptions.LazyFindObject].SetValue("true");
+        Options[CppOptions.GenerateParametersFile].SetValue("true");
+        Options[CppOptions.ShouldUseStrings].SetValue("true");
+        Options[CppOptions.ShouldXorStrings].SetValue("false");
 
 #if DEBUG
         //if (enginePackage.Name != "InstancesHelper" && enginePackage.Name != "BasicTypes" && enginePackage.Name != "CoreUObject") // BasicTypes
