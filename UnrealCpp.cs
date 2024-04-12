@@ -44,7 +44,13 @@ internal enum CppOptions
     XorFuncName
 }
 
-[PluginInfo(Name = nameof(UnrealCpp), Version = "5.0.0", Author = "CorrM", Description = "Add Cpp syntax support for UnrealEngine", WebsiteLink = "https://github.com/CheatGear", SourceCodeLink = "https://github.com/CheatGear/Output.UnrealCpp")]
+[PluginInfo(Name = nameof(UnrealCpp),
+    Version = "5.0.0",
+    Author = "CorrM",
+    Description = "Add Cpp syntax support for UnrealEngine",
+    WebsiteLink = "https://github.com/CheatGear",
+    SourceCodeLink = "https://github.com/CheatGear/Output.UnrealCpp"
+)]
 public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 {
     private readonly CppProcessor _cppProcessor;
@@ -189,7 +195,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 // so, additional check needed to check if that is the UnrealEngine
                 // return parameter or function return type(No name)
                 if (param.IsReturn && (param.Type == "void" || param.Name.IsEmpty()))
+                {
                     continue;
+                }
 
                 var cppVar = new CppField()
                 {
@@ -267,8 +275,12 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
                 foreach (EngineParameter param in function.Parameters)
                 {
-                    if (param.IsReturn && param.Type == "void" /* || (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")*/)
+                    if (param.IsReturn
+                        && param.Type
+                        == "void" /* || (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")*/)
+                    {
                         continue;
+                    }
 
                     body.Add($"\t{param.Type,-50} {param.Name};");
                 }
@@ -280,7 +292,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             {
                 // Not needed
                 if (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")
+                {
                     continue;
+                }
 
                 body.Add($"params.{param.Name} = {param.Name};");
             }
@@ -293,7 +307,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             body.Add("auto flags = fn->FunctionFlags;");
 
             if (function.IsNative)
+            {
                 body.Add($"fn->FunctionFlags |= 0x00000400; // Native");
+            }
 
             if (function.IsStatic && !SdkFile!.ShouldConvertStaticMethods)
             {
@@ -373,7 +389,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 FlagsString = "Predefined, Static",
                 Parameters =
                 [
-                    new()
+                    new EngineParameter
                     {
                         ParamKind = FuncParameterKind.Return,
                         Type = "UClass*",
@@ -397,7 +413,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
             if (Options[CppOptions.ShouldUseStrings].Value == "true")
             {
-                string classStr = Options[CppOptions.ShouldXorStrings].Value == "true" ? $"{Options[CppOptions.XorFuncName].Value}(\"{ec.FullName}\")" : $"\"{ec.FullName}\"";
+                string classStr = Options[CppOptions.ShouldXorStrings].Value == "true"
+                    ? $"{Options[CppOptions.XorFuncName].Value}(\"{ec.FullName}\")"
+                    : $"\"{ec.FullName}\"";
                 staticClassFunc.Body.Add($"{prefix}UObject::FindClass({classStr});");
             }
             else
@@ -467,7 +485,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     {
         // # Conditions
         if (Options[CppOptions.OffsetsOnly].Value == "true")
+        {
             cppPackage.Conditions.Add(nameof(CppOptions.OffsetsOnly));
+        }
 
         if (enginePackage.IsPredefined && enginePackage.Name == "BasicTypes")
         {
@@ -506,7 +526,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     private void PrepareEngineFunction(EngineStruct parent, EngineFunction eFunc)
     {
         if (!eFunc.IsPredefined)
+        {
             eFunc.Body = BuildMethodBody(parent, eFunc);
+        }
     }
 
     private void PrepareCppFunction(EngineFunction originalFunc, CppFunction cppFunc)
@@ -522,16 +544,22 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     {
         // Prepare methods
         foreach (EngineFunction eFunc in eStruct.Methods)
+        {
             PrepareEngineFunction(eStruct, eFunc);
+        }
 
         // Convert
         CppStruct cppStruct = eStruct.ToCpp();
 
         if (eStruct is EngineClass)
+        {
             cppStruct.IsClass = true;
+        }
 
         foreach (CppField cField in cppStruct.Fields)
+        {
             cField.Type = ToLangType(cField.Type, true);
+        }
 
         foreach (CppFunction cppFunc in cppStruct.Methods)
         {
@@ -552,10 +580,21 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         var includes = new List<string>();
 
         if (Options[CppOptions.PrecompileSyntax].Value != "true")
+        {
             includes.Add("\"../SDK.h\"");
+        }
 
         // File header
-        sb.Append(_cppProcessor.GetFileHeader(package.HeadingComment, package.NameSpace, pragmas, includes, null, null, package.BeforeNameSpace, out int indentLvl));
+        sb.Append(_cppProcessor.GetFileHeader(package.HeadingComment,
+                package.NameSpace,
+                pragmas,
+                includes,
+                null,
+                null,
+                package.BeforeNameSpace,
+                out int indentLvl
+            )
+        );
 
         // Structs
         sb.Append(_cppProcessor.GenerateStructs(paramStructs, indentLvl, null));
@@ -600,7 +639,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         var cppModel = new CppPackage()
         {
             Name = enginePackage.Name,
-            BeforeNameSpace = $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(push, 0x{SdkFile.GlobalMemberAlignment:X2}){Environment.NewLine}#endif",
+            BeforeNameSpace =
+                $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(push, 0x{SdkFile.GlobalMemberAlignment:X2}){Environment.NewLine}#endif",
             AfterNameSpace = $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(pop){Environment.NewLine}#endif",
             HeadingComment =
             [
@@ -621,7 +661,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         PreparePackageModel(cppModel, enginePackage);
 
         // Parameters Files
-        if (!enginePackage.IsPredefined && Options[CppOptions.GenerateParametersFile].Value == "true" && Options[CppOptions.OffsetsOnly].Value != "true")
+        if (!enginePackage.IsPredefined
+            && Options[CppOptions.GenerateParametersFile].Value == "true"
+            && Options[CppOptions.OffsetsOnly].Value != "true")
         {
             string fileName = $"{enginePackage.Name}_Params.h";
             IEnumerable<CppStruct> paramStructs = GetFuncParametersStructs(enginePackage);
@@ -636,13 +678,19 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             .ToDictionary(kv => Path.Combine("SDK", kv.Key), kv => kv.Value);
 
         foreach ((string fName, string fContent) in cppFiles)
+        {
             ret.Add(fName, fContent);
+        }
 
         // Useful for unit tests
         if (!enginePackage.IsPredefined)
         {
-            SavedStructs.AddRange(structs.Where(cs => !cs.IsClass).SelectMany(cs => enginePackage.Structs.Where(ec => ec.NameCpp == cs.Name)));
-            SavedClasses.AddRange(structs.Where(cs => cs.IsClass).SelectMany(cs => enginePackage.Classes.Where(ec => ec.NameCpp == cs.Name)));
+            SavedStructs.AddRange(structs.Where(cs => !cs.IsClass)
+                .SelectMany(cs => enginePackage.Structs.Where(ec => ec.NameCpp == cs.Name))
+            );
+            SavedClasses.AddRange(structs.Where(cs => cs.IsClass)
+                .SelectMany(cs => enginePackage.Classes.Where(ec => ec.NameCpp == cs.Name))
+            );
         }
 
         return ret;
@@ -688,14 +736,18 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
         // Check for missing structs
         if (SdkFile.MissedStructs.Count == 0)
+        {
             return default;
+        }
 
         List<CppStruct> structs = SdkFile.MissedStructs.ConvertAll(ConvertStruct);
         foreach (CppStruct cppStruct in structs)
         {
             EngineStruct? es = SdkFile.MissedStructs.Find(es => es.NameCpp == cppStruct.Name);
             if (es is null)
+            {
                 throw new Exception($"Can't find missing struct '{cppStruct.Name}'");
+            }
 
             cppStruct.Fields.Add(new CppField()
                 {
@@ -769,7 +821,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             await using (Stream embeddedUnitTests = CGUtils.GetEmbeddedFileAsync(unitTestsZipName, GetType().Assembly))
             {
                 if (!Directory.Exists(unitTestsPath))
+                {
                     Directory.CreateDirectory(unitTestsPath);
+                }
 
                 using var uZip = new ZipArchive(embeddedUnitTests);
                 uZip.ExtractToDirectory(unitTestsPath, true);
@@ -780,9 +834,14 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             string testsVcxprojFiltersPath = Path.Combine(unitTestsPath, $"{gameProjName}UnitTests.vcxproj.filters");
 
             if (File.Exists(testsVcxprojPath))
+            {
                 File.Delete(testsVcxprojPath);
+            }
+
             if (File.Exists(testsVcxprojFiltersPath))
+            {
                 File.Delete(testsVcxprojFiltersPath);
+            }
 
             File.Move(Path.Combine(unitTestsPath, "UnitTestsProject.vcxproj"), testsVcxprojPath);
             File.Move(Path.Combine(unitTestsPath, "UnitTestsProject.vcxproj.filters"), testsVcxprojFiltersPath);
@@ -812,7 +871,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             await using (Stream embeddedGameProj = CGUtils.GetEmbeddedFileAsync(gameZipName, GetType().Assembly))
             {
                 if (!Directory.Exists(gameProjPath))
+                {
                     Directory.CreateDirectory(gameProjPath);
+                }
 
                 using var uZip = new ZipArchive(embeddedGameProj);
                 uZip.ExtractToDirectory(gameProjPath, true);
@@ -823,9 +884,14 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             string gameVcxprojFiltersPath = Path.Combine(gameProjPath, $"{gameProjName}.vcxproj.filters");
 
             if (File.Exists(gameVcxprojPath))
+            {
                 File.Delete(gameVcxprojPath);
+            }
+
             if (File.Exists(gameVcxprojFiltersPath))
+            {
                 File.Delete(gameVcxprojFiltersPath);
+            }
 
             File.Move(Path.Combine(gameProjPath, "GameProject.vcxproj"), gameVcxprojPath);
             File.Move(Path.Combine(gameProjPath, "GameProject.vcxproj.filters"), gameVcxprojFiltersPath);
@@ -858,7 +924,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         foreach (IUnrealPackage pack in SdkFile.Packages)
         {
             foreach ((string fName, string fContent) in await GeneratePackageFilesAsync(pack).ConfigureAwait(false))
+            {
                 await FileManager.WriteAsync(gameProjDir, fName, fContent).ConfigureAwait(false);
+            }
 
             if (Status?.ProgressbarStatus is not null)
             {
@@ -897,14 +965,18 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             await FileManager.WriteAsync(gameProjDir, fName, fContent).ConfigureAwait(false);
 
             if (!fName.EndsWith(".cpp") && fName.ToLower() != "pch.h")
+            {
                 builder.AppendLine($"#include \"{fName.Replace("\\", "/")}\"");
+            }
         }
 
         // Missed structs
         if (SdkFile.MissedStructs.Count > 0)
         {
             if (Status?.TextStatus is not null)
+            {
                 await Status.TextStatus.Invoke("Generating missed structs").ConfigureAwait(false);
+            }
 
             (string fName, string fContent) = GenerateMissing();
             await FileManager.WriteAsync(Path.Combine(gameProjDir, "SDK"), fName, fContent).ConfigureAwait(false);
@@ -916,9 +988,12 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
         // Package sorter
         if (Status?.TextStatus is not null)
+        {
             await Status.TextStatus.Invoke("Sort packages depend on dependencies").ConfigureAwait(false);
+        }
 
-        PackageSorterResult<IEnginePackage> sortResult = PackageSorter.Sort(SdkFile.Packages.Cast<IEnginePackage>().ToList());
+        PackageSorterResult<IEnginePackage> sortResult =
+            PackageSorter.Sort(SdkFile.Packages.Cast<IEnginePackage>().ToList());
         if (sortResult.CycleList.Count > 0)
         {
             builder.AppendLine("// # Dependency cycle headers");
@@ -935,10 +1010,14 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         }
 
         foreach (IEnginePackage package in sortResult.SortedList.Where(p => p.IsPredefined))
+        {
             builder.AppendLine($"#include \"SDK/{package.Name}_Package.h\"");
+        }
 
         foreach (IEnginePackage package in sortResult.SortedList.Where(p => !p.IsPredefined))
+        {
             builder.AppendLine($"#include \"SDK/{package.Name}_Package.h\"");
+        }
 
         return builder.ToString();
     }
@@ -968,10 +1047,14 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         foreach (UnrealPackage pack in SdkFile.Packages.Where(p => !p.IsPredefined))
         {
             foreach (EngineStruct @struct in pack.Structs)
+            {
                 AddPredefinedMethodsToStruct(@struct);
+            }
 
             foreach (EngineClass @class in pack.Classes)
+            {
                 AddPredefinedMethodsToClass(@class);
+            }
         }
 
         return ValueTask.CompletedTask;

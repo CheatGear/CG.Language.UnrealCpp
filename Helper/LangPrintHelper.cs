@@ -83,10 +83,14 @@ public static class LangPrintHelper
         inlineComment.Append($"0x{variable.Offset:X4}(0x{variable.Size:X4})");
 
         if (!string.IsNullOrEmpty(variable.Comment))
+        {
             inlineComment.Append($" {variable.Comment}");
+        }
 
         if (!string.IsNullOrEmpty(variable.FlagsString))
+        {
             inlineComment.Append($" {variable.FlagsString}");
+        }
 
         return new CppField()
         {
@@ -171,7 +175,9 @@ public static class LangPrintHelper
 
         bool isStatic = func.IsStatic;
         if (func.IsStatic && !func.IsPredefined && func.Name.StartsWith("STATIC_"))
+        {
             isStatic = false;
+        }
 
         return new CppFunction()
         {
