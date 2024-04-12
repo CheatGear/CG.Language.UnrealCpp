@@ -40,12 +40,17 @@ public static class LangPrintHelper
             Name = eEnum.NameCpp,
             Type = eEnum.Type,
             IsClass = true,
-            Values = eEnum.Values.Select(kv => new PackageNameValue() { Name = kv.Key, Value = kv.Value }).ToList(),
+            Values = eEnum.Values.Select(kv => new PackageNameValue()
+                {
+                    Name = kv.Key,
+                    Value = kv.Value
+                }
+            ).ToList(),
             Conditions = eEnum.Conditions,
             Comments = eEnum.Comments,
             BeforePrint = eEnum.BeforePrint,
             AfterPrint = eEnum.AfterPrint
-        }.WithComment(new List<string>() { eEnum.FullName });
+        }.WithComment([eEnum.FullName]);
     }
 
     /// <summary>
@@ -141,13 +146,13 @@ public static class LangPrintHelper
         }
         else
         {
-            comments = new List<string>()
-            {
+            comments =
+            [
                 "Function:",
                 $"\t\tRVA    -> 0x{func.Rva:X8}",
                 $"\t\tName   -> {func.FullName}",
                 $"\t\tFlags  -> ({func.FlagsString})"
-            };
+            ];
 
             if (@params.Count > 0)
             {
@@ -211,7 +216,7 @@ public static class LangPrintHelper
             Comments = @struct.Comments,
             BeforePrint = @struct.BeforePrint,
             AfterPrint = @struct.AfterPrint
-        }.WithComment(new List<string>() { @struct.FullName, sizeInfo });
+        }.WithComment([@struct.FullName, sizeInfo]);
     }
 
     /// <summary>

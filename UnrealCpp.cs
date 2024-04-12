@@ -79,8 +79,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     {
         _cppProcessor = new CppProcessor();
 
-        SavedClasses = new List<EngineClass>();
-        SavedStructs = new List<EngineStruct>();
+        SavedClasses = [];
+        SavedStructs = [];
         Options = new Dictionary<Enum, OutputOption>()
         {
             {
@@ -144,10 +144,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
     private static List<string> GenerateMethodConditions()
     {
-        return new List<string>()
-        {
-            $"!{nameof(CppOptions.OffsetsOnly)}"
-        };
+        return [$"!{nameof(CppOptions.OffsetsOnly)}"];
     }
 
     private static IEnumerable<CppDefine> GetDefines(IEnginePackage enginePackage)
@@ -183,10 +180,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             {
                 Name = $"{@class.NameCpp}_{func.Name}_Params",
                 IsClass = false,
-                Comments = new List<string>()
-                {
-                    func.FullName
-                }
+                Comments = [func.FullName]
             };
 
             foreach (EngineParameter param in func.Parameters)
@@ -377,8 +371,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 IsInline = false,
                 IsNative = false,
                 FlagsString = "Predefined, Static",
-                Parameters = new List<EngineParameter>()
-                {
+                Parameters =
+                [
                     new()
                     {
                         ParamKind = FuncParameterKind.Return,
@@ -386,7 +380,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                         Name = "ReturnValue",
                         FlagsString = ""
                     }
-                }
+                ]
             };
 
             string prefix;
@@ -491,10 +485,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             //}
 
             // # Forwards
-            cppPackage.Forwards = new List<string>()
-            {
-                "class UObject"
-            };
+            cppPackage.Forwards = ["class UObject"];
 
             CppFunction? initFunc = cppPackage.Functions.Find(cf => cf.Name == "InitSdk" && cf.Params.Count == 0);
             if (initFunc is not null)
@@ -611,16 +602,13 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             Name = enginePackage.Name,
             BeforeNameSpace = $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(push, 0x{SdkFile.GlobalMemberAlignment:X2}){Environment.NewLine}#endif",
             AfterNameSpace = $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(pop){Environment.NewLine}#endif",
-            HeadingComment = new List<string>()
-            {
+            HeadingComment =
+            [
                 $"Name: {SdkFile.GameName}",
                 $"Version: {SdkFile.GameVersion}"
-            },
+            ],
             NameSpace = SdkFile.Namespace,
-            Pragmas = new List<string>()
-            {
-                "once"
-            },
+            Pragmas = ["once"],
             Defines = GetDefines(enginePackage).ToList(),
             Functions = GetFunctions(enginePackage).ToList(),
             Constants = GetConstants(enginePackage).ToList(),
@@ -710,11 +698,12 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 throw new Exception($"Can't find missing struct '{cppStruct.Name}'");
 
             cppStruct.Fields.Add(new CppField()
-            {
-                Name = "UnknownData",
-                Type = "unsigned char",
-                ArrayDim = $"0x{es.Size:X}"
-            });
+                {
+                    Name = "UnknownData",
+                    Type = "unsigned char",
+                    ArrayDim = $"0x{es.Size:X}"
+                }
+            );
         }
 
         var sb = new StringBuilder();
@@ -876,7 +865,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 await Status.ProgressbarStatus.Invoke(
                     "",
                     packCount,
-                    SdkFile.Packages.Count - packCount).ConfigureAwait(false);
+                    SdkFile.Packages.Count - packCount
+                ).ConfigureAwait(false);
             }
 
             packCount++;
