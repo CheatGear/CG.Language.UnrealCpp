@@ -13,14 +13,14 @@ public class UnitTest : IncludeFile<UnrealCpp>
 {
     private readonly UnrealCpp _lang;
 
-    public override string FileName => "UnitTest.cpp";
-
-    public override bool IncludeInMainSdkFile => false;
-
     public UnitTest(UnrealCpp lang) : base(lang)
     {
         _lang = lang;
     }
+
+    public override string FileName => "UnitTest.cpp";
+
+    public override bool IncludeInMainSdkFile => false;
 
     public override async ValueTask<string> ProcessAsync(OutputPurpose processPurpose)
     {
@@ -42,13 +42,15 @@ public class UnitTest : IncludeFile<UnrealCpp>
 
         List<string> GenTestString(IEnumerable<EngineStruct> ss)
         {
-            return ss.Select(c =>
+            return ss.Select(
+                    c =>
                     {
                         string cheatGearClassName = $"{Lang.SdkFile.Namespace}::{c.NameCpp}";
                         string[] memberTests = c.Fields
                             .Where(m => !m.IsStatic && !m.IsBitField)
-                            .Select(m =>
-                                $"\t\t\tCHEAT_GEAR_CHECK_OFFSET({{3}}, {m.Name.Split('[')[0].Split(':')[0].Trim()}, 0x{m.Offset:X4});"
+                            .Select(
+                                m =>
+                                    $"\t\t\tCHEAT_GEAR_CHECK_OFFSET({{3}}, {m.Name.Split('[')[0].Split(':')[0].Trim()}, 0x{m.Offset:X4});"
                             )
                             .ToArray();
 

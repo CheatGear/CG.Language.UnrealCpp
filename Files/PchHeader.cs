@@ -8,12 +8,12 @@ namespace CG.Output.UnrealCpp.Files;
 
 public class PchHeader : IncludeFile<UnrealCpp>
 {
-    public override string FileName { get; } = "pch.h";
-    public override bool IncludeInMainSdkFile { get; } = false;
-
     public PchHeader(UnrealCpp lang) : base(lang)
     {
     }
+
+    public override string FileName { get; } = "pch.h";
+    public override bool IncludeInMainSdkFile { get; } = false;
 
     public override ValueTask<string> ProcessAsync(OutputPurpose processPurpose)
     {

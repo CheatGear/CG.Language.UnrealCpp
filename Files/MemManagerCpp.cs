@@ -8,12 +8,12 @@ namespace CG.Output.UnrealCpp.Files;
 
 public class MemManagerCpp : IncludeFile<UnrealCpp>
 {
-    public override string FileName { get; } = "MemoryManager.cpp";
-    public override bool IncludeInMainSdkFile { get; } = false;
-
     public MemManagerCpp(UnrealCpp lang) : base(lang)
     {
     }
+
+    public override string FileName { get; } = "MemoryManager.cpp";
+    public override bool IncludeInMainSdkFile { get; } = false;
 
     public override ValueTask<string> ProcessAsync(OutputPurpose processPurpose)
     {

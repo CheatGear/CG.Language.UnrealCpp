@@ -29,22 +29,23 @@ internal enum CppOptions
     GenerateParametersFile,
 
     /// <summary>
-    /// If this true (default) the objects are referenced by their name.
-    /// Otherwise the objects global index will be used.
-    /// Warning: The index may change on updates or even on every start of the games.
+    ///     If this true (default) the objects are referenced by their name.
+    ///     Otherwise the objects global index will be used.
+    ///     Warning: The index may change on updates or even on every start of the games.
     /// </summary>
     ShouldUseStrings,
 
     /// <summary>
-    /// If this true (default: false) the strings printed by the generator get surrounded by _xor_(...).
-    /// With the XorStr library these strings get xor encrypted at compile time.
+    ///     If this true (default: false) the strings printed by the generator get surrounded by _xor_(...).
+    ///     With the XorStr library these strings get xor encrypted at compile time.
     /// </summary>
     ShouldXorStrings,
 
-    XorFuncName
+    XorFuncName,
 }
 
-[PluginInfo(Name = nameof(UnrealCpp),
+[PluginInfo(
+    Name = nameof(UnrealCpp),
     Version = "5.0.0",
     Author = "CorrM",
     Description = "Add Cpp syntax support for UnrealEngine",
@@ -55,39 +56,13 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 {
     private readonly CppProcessor _cppProcessor;
 
-    protected override Dictionary<string, string> LangTypes { get; } = new()
-    {
-        { "int64", "int64_t" },
-        { "int32", "int32_t" },
-        { "int16", "int16_t" },
-        { "int8", "int8_t" },
-
-        { "uint64", "uint64_t" },
-        { "uint32", "uint32_t" },
-        { "uint16", "uint16_t" },
-        { "uint8", "uint8_t" }
-    };
-
-    internal List<EngineClass> SavedClasses { get; }
-    internal List<EngineStruct> SavedStructs { get; }
-
-    public override PluginKind PluginType => PluginKind.OutputSupport;
-
-    public override string OutputName => "Cpp";
-
-    public override GameEngine SupportedEngines => GameEngine.Unreal;
-
-    public override OutputPurpose SupportedPurpose => OutputPurpose.Internal /* | OutputProps.External*/;
-
-    public override Dictionary<Enum, OutputOption> Options { get; }
-
     public UnrealCpp()
     {
         _cppProcessor = new CppProcessor();
 
         SavedClasses = [];
         SavedStructs = [];
-        Options = new Dictionary<Enum, OutputOption>()
+        Options = new Dictionary<Enum, OutputOption>
         {
             {
                 CppOptions.PrecompileSyntax, new OutputOption(
@@ -144,9 +119,34 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                     "XOR function name",
                     "_xor_"
                 )
-            }
+            },
         };
     }
+
+    protected override Dictionary<string, string> LangTypes { get; } = new()
+    {
+        { "int64", "int64_t" },
+        { "int32", "int32_t" },
+        { "int16", "int16_t" },
+        { "int8", "int8_t" },
+        { "uint64", "uint64_t" },
+        { "uint32", "uint32_t" },
+        { "uint16", "uint16_t" },
+        { "uint8", "uint8_t" },
+    };
+
+    internal List<EngineClass> SavedClasses { get; }
+    internal List<EngineStruct> SavedStructs { get; }
+
+    public override PluginKind PluginType => PluginKind.OutputSupport;
+
+    public override string OutputName => "Cpp";
+
+    public override GameEngine SupportedEngines => GameEngine.Unreal;
+
+    public override OutputPurpose SupportedPurpose => OutputPurpose.Internal /* | OutputProps.External*/;
+
+    public override Dictionary<Enum, OutputOption> Options { get; }
 
     private static List<string> GenerateMethodConditions()
     {
@@ -182,11 +182,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
         foreach ((EngineClass @class, EngineFunction func) in functions)
         {
-            var cppParamStruct = new CppStruct()
+            var cppParamStruct = new CppStruct
             {
-                Name = $"{@class.NameCpp}_{func.Name}_Params",
-                IsClass = false,
-                Comments = [func.FullName]
+                Name = $"{@class.NameCpp}_{func.Name}_Params", IsClass = false, Comments = [func.FullName],
             };
 
             foreach (EngineParameter param in func.Parameters)
@@ -199,11 +197,11 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                     continue;
                 }
 
-                var cppVar = new CppField()
+                var cppVar = new CppField
                 {
                     Type = param.Type,
                     Name = param.Name,
-                    InlineComment = $"0x{param.Offset:X4}(0x{param.Size:X4}) {param.Comment} ({param.FlagsString})"
+                    InlineComment = $"0x{param.Offset:X4}(0x{param.Size:X4}) {param.Comment} ({param.FlagsString})",
                 };
 
                 cppParamStruct.Fields.Add(cppVar);
@@ -250,7 +248,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 initBody += Options[CppOptions.ShouldXorStrings].Value == "true"
                     ? $"{Options[CppOptions.XorFuncName].Value}(\"{function.FullName}\")"
                     : $"\"{function.FullName}\"";
-                initBody += $");";
+                initBody += ");";
             }
             else
             {
@@ -275,9 +273,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
                 foreach (EngineParameter param in function.Parameters)
                 {
-                    if (param.IsReturn
-                        && param.Type
-                        == "void" /* || (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")*/)
+                    if (param.IsReturn &&
+                        param.Type ==
+                        "void" /* || (param.Name.StartsWith("UnknownData_") && param.Type == "unsigned char")*/)
                     {
                         continue;
                     }
@@ -308,7 +306,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
             if (function.IsNative)
             {
-                body.Add($"fn->FunctionFlags |= 0x00000400; // Native");
+                body.Add("fn->FunctionFlags |= 0x00000400; // Native");
             }
 
             if (function.IsStatic && !SdkFile!.ShouldConvertStaticMethods)
@@ -377,7 +375,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     {
         // StaticClass
         {
-            var staticClassFunc = new EngineFunction()
+            var staticClassFunc = new EngineFunction
             {
                 FullName = $"PredefinedFunction {ec.NameCpp}.StaticClass",
                 Name = "StaticClass",
@@ -391,12 +389,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 [
                     new EngineParameter
                     {
-                        ParamKind = FuncParameterKind.Return,
-                        Type = "UClass*",
-                        Name = "ReturnValue",
-                        FlagsString = ""
-                    }
-                ]
+                        ParamKind = FuncParameterKind.Return, Type = "UClass*", Name = "ReturnValue", FlagsString = "",
+                    },
+                ],
             };
 
             string prefix;
@@ -423,7 +418,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 staticClassFunc.Body.Add($"{prefix}UObject::GetObjectCasted<UClass>({ec.ObjectIndex});");
             }
 
-            staticClassFunc.Body.Add($"return ptr;");
+            staticClassFunc.Body.Add("return ptr;");
 
             ec.Methods.Add(staticClassFunc);
         }
@@ -573,10 +568,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     private string MakeFuncParametersFile(CppPackage package, IEnumerable<CppStruct> paramStructs)
     {
         var sb = new StringBuilder();
-        var pragmas = new List<string>()
-        {
-            "once"
-        };
+        var pragmas = new List<string> { "once" };
         var includes = new List<string>();
 
         if (Options[CppOptions.PrecompileSyntax].Value != "true")
@@ -585,7 +577,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         }
 
         // File header
-        sb.Append(_cppProcessor.GetFileHeader(package.HeadingComment,
+        sb.Append(
+            _cppProcessor.GetFileHeader(
+                package.HeadingComment,
                 package.NameSpace,
                 pragmas,
                 includes,
@@ -606,7 +600,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     }
 
     /// <summary>
-    /// Generate enginePackage files
+    ///     Generate enginePackage files
     /// </summary>
     /// <param name="enginePackage">Package to generate files for</param>
     /// <returns>File name and its content</returns>
@@ -636,17 +630,13 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         structs.AddRange(GetClasses(enginePackage));
 
         // Make CppPackageModel
-        var cppModel = new CppPackage()
+        var cppModel = new CppPackage
         {
             Name = enginePackage.Name,
             BeforeNameSpace =
                 $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(push, 0x{SdkFile.GlobalMemberAlignment:X2}){Environment.NewLine}#endif",
             AfterNameSpace = $"#ifdef _MSC_VER{Environment.NewLine}\t#pragma pack(pop){Environment.NewLine}#endif",
-            HeadingComment =
-            [
-                $"Name: {SdkFile.GameName}",
-                $"Version: {SdkFile.GameVersion}"
-            ],
+            HeadingComment = [$"Name: {SdkFile.GameName}", $"Version: {SdkFile.GameVersion}"],
             NameSpace = SdkFile.Namespace,
             Pragmas = ["once"],
             Defines = GetDefines(enginePackage).ToList(),
@@ -654,16 +644,16 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             Constants = GetConstants(enginePackage).ToList(),
             Enums = GetEnums(enginePackage).ToList(),
             Structs = structs,
-            Conditions = enginePackage.Conditions
+            Conditions = enginePackage.Conditions,
         };
 
         cppModel.CppIncludes.Add(Options[CppOptions.PrecompileSyntax].Value == "true" ? "\"pch.h\"" : "\"../SDK.h\"");
         PreparePackageModel(cppModel, enginePackage);
 
         // Parameters Files
-        if (!enginePackage.IsPredefined
-            && Options[CppOptions.GenerateParametersFile].Value == "true"
-            && Options[CppOptions.OffsetsOnly].Value != "true")
+        if (!enginePackage.IsPredefined &&
+            Options[CppOptions.GenerateParametersFile].Value == "true" &&
+            Options[CppOptions.OffsetsOnly].Value != "true")
         {
             string fileName = $"{enginePackage.Name}_Params.h";
             IEnumerable<CppStruct> paramStructs = GetFuncParametersStructs(enginePackage);
@@ -685,11 +675,13 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         // Useful for unit tests
         if (!enginePackage.IsPredefined)
         {
-            SavedStructs.AddRange(structs.Where(cs => !cs.IsClass)
-                .SelectMany(cs => enginePackage.Structs.Where(ec => ec.NameCpp == cs.Name))
+            SavedStructs.AddRange(
+                structs.Where(cs => !cs.IsClass)
+                    .SelectMany(cs => enginePackage.Structs.Where(ec => ec.NameCpp == cs.Name))
             );
-            SavedClasses.AddRange(structs.Where(cs => cs.IsClass)
-                .SelectMany(cs => enginePackage.Classes.Where(ec => ec.NameCpp == cs.Name))
+            SavedClasses.AddRange(
+                structs.Where(cs => cs.IsClass)
+                    .SelectMany(cs => enginePackage.Classes.Where(ec => ec.NameCpp == cs.Name))
             );
         }
 
@@ -697,7 +689,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     }
 
     /// <summary>
-    /// Process local files that needed to be included
+    ///     Process local files that needed to be included
     /// </summary>
     /// <param name="processPurpose">Process props</param>
     private async ValueTask<Dictionary<string, string>> GenerateIncludesAsync(OutputPurpose processPurpose)
@@ -727,7 +719,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     }
 
     /// <summary>
-    /// Generate file for missed structs
+    ///     Generate file for missed structs
     /// </summary>
     /// <returns>File name and file content</returns>
     private (string, string) GenerateMissing()
@@ -749,12 +741,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 throw new Exception($"Can't find missing struct '{cppStruct.Name}'");
             }
 
-            cppStruct.Fields.Add(new CppField()
-                {
-                    Name = "UnknownData",
-                    Type = "unsigned char",
-                    ArrayDim = $"0x{es.Size:X}"
-                }
+            cppStruct.Fields.Add(
+                new CppField { Name = "UnknownData", Type = "unsigned char", ArrayDim = $"0x{es.Size:X}" }
             );
         }
 
@@ -780,7 +768,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     }
 
     /// <summary>
-    /// Generate solution with c++ game project and UnitTests for game project
+    ///     Generate solution with c++ game project and UnitTests for game project
     /// </summary>
     /// <param name="saveDirPath"></param>
     /// <returns>
@@ -795,20 +783,20 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         string unitTestsPath = Path.Combine(saveDirPath, unitTestsName);
 
         // # Make sln file
-        var projects = new List<SlnProject>()
+        var projects = new List<SlnProject>
         {
             new()
             {
                 Id = Guid.NewGuid(),
                 Name = unitTestsName,
-                RelativePath = Path.Combine(unitTestsName, unitTestsName + ".vcxproj")
+                RelativePath = Path.Combine(unitTestsName, unitTestsName + ".vcxproj"),
             },
             new()
             {
                 Id = Guid.NewGuid(),
                 Name = gameProjName,
-                RelativePath = Path.Combine(gameProjName, gameProjName + ".vcxproj")
-            }
+                RelativePath = Path.Combine(gameProjName, gameProjName + ".vcxproj"),
+            },
         };
 
         string slnFile = new SlnBuilder().GenerateSlnFile(projects);
@@ -850,7 +838,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             {
                 string vcxprojString;
                 using (var sr = new StreamReader(vcxprojStream, leaveOpen: true))
+                {
                     vcxprojString = await sr.ReadToEndAsync().ConfigureAwait(false);
+                }
 
                 vcxprojString = vcxprojString
                     .Replace("{{CG_GAME_NAME}}", gameProjName)
@@ -860,7 +850,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 vcxprojStream.Seek(0, SeekOrigin.Begin);
                 vcxprojStream.SetLength(vcxprojString.Length);
                 await using (var sr = new StreamWriter(vcxprojStream, leaveOpen: true))
+                {
                     await sr.WriteAsync(vcxprojString).ConfigureAwait(false);
+                }
             }
         }
 
@@ -900,7 +892,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             {
                 string vcxprojString;
                 using (var sr = new StreamReader(vcxprojStream, leaveOpen: true))
+                {
                     vcxprojString = await sr.ReadToEndAsync().ConfigureAwait(false);
+                }
 
                 vcxprojString = vcxprojString
                     .Replace("{{CG_GAME_NAME}}", gameProjName)
@@ -910,7 +904,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 vcxprojStream.Seek(0, SeekOrigin.Begin);
                 vcxprojStream.SetLength(vcxprojString.Length);
                 await using (var sr = new StreamWriter(vcxprojStream, leaveOpen: true))
+                {
                     await sr.WriteAsync(vcxprojString).ConfigureAwait(false);
+                }
             }
         }
 
@@ -931,10 +927,11 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             if (Status?.ProgressbarStatus is not null)
             {
                 await Status.ProgressbarStatus.Invoke(
-                    "",
-                    packCount,
-                    SdkFile.Packages.Count - packCount
-                ).ConfigureAwait(false);
+                        "",
+                        packCount,
+                        SdkFile.Packages.Count - packCount
+                    )
+                    .ConfigureAwait(false);
             }
 
             packCount++;
@@ -1026,14 +1023,14 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
     {
         ArgumentNullException.ThrowIfNull(SdkFile);
 
-        var cppOpts = new CppLangOptions()
+        var cppOpts = new CppLangOptions
         {
             NewLine = NewLineType.CRLF,
             PrintSectionName = true,
             InlineCommentPadSize = 56,
             VariableMemberTypePadSize = 60,
             GeneratePackageSyntax = true,
-            AddPackageHeaderToCppFile = false
+            AddPackageHeaderToCppFile = false,
         };
         _cppProcessor.Init(cppOpts);
 
