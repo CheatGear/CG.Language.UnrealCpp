@@ -5,8 +5,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CG.Output.UnrealCpp.Files;
-using CG.Output.UnrealCpp.Helper;
+using CG.Output.Files;
+using CG.Output.Helper;
 using CG.SDK.Dotnet.Attributes;
 using CG.SDK.Dotnet.Engine;
 using CG.SDK.Dotnet.Engine.Models;
@@ -18,7 +18,7 @@ using CG.SDK.Dotnet.Plugin.Output;
 using LangPrint;
 using LangPrint.Cpp;
 
-namespace CG.Output.UnrealCpp;
+namespace CG.Output;
 
 internal enum CppOptions
 {
@@ -184,7 +184,9 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         {
             var cppParamStruct = new CppStruct
             {
-                Name = $"{@class.NameCpp}_{func.Name}_Params", IsClass = false, Comments = [func.FullName],
+                Name = $"{@class.NameCpp}_{func.Name}_Params",
+                IsClass = false,
+                Comments = [func.FullName],
             };
 
             foreach (EngineParameter param in func.Parameters)
@@ -389,7 +391,10 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 [
                     new EngineParameter
                     {
-                        ParamKind = FuncParameterKind.Return, Type = "UClass*", Name = "ReturnValue", FlagsString = "",
+                        ParamKind = FuncParameterKind.Return,
+                        Type = "UClass*",
+                        Name = "ReturnValue",
+                        FlagsString = "",
                     },
                 ],
             };
@@ -742,7 +747,12 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
             }
 
             cppStruct.Fields.Add(
-                new CppField { Name = "UnknownData", Type = "unsigned char", ArrayDim = $"0x{es.Size:X}" }
+                new CppField
+                {
+                    Name = "UnknownData",
+                    Type = "unsigned char",
+                    ArrayDim = $"0x{es.Size:X}"
+                }
             );
         }
 

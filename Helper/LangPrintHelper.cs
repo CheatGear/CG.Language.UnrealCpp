@@ -6,7 +6,7 @@ using CG.SDK.Dotnet.Helper;
 using LangPrint;
 using LangPrint.Cpp;
 
-namespace CG.Output.UnrealCpp.Helper;
+namespace CG.Output.Helper;
 
 public static class LangPrintHelper
 {
@@ -41,7 +41,11 @@ public static class LangPrintHelper
             Type = eEnum.Type,
             IsClass = true,
             Values = eEnum.Values.Select(
-                    kv => new PackageNameValue { Name = kv.Key, Value = kv.Value }
+                    kv => new PackageNameValue
+                    {
+                        Name = kv.Key,
+                        Value = kv.Value
+                    }
                 )
                 .ToList(),
             Conditions = eEnum.Conditions,
