@@ -44,7 +44,7 @@ public static class LangPrintHelper
                     kv => new PackageNameValue
                     {
                         Name = kv.Key,
-                        Value = kv.Value
+                        Value = kv.Value,
                     }
                 )
                 .ToList(),

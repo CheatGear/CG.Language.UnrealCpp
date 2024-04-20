@@ -65,7 +65,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
         Options = new Dictionary<Enum, OutputOption>
         {
             {
-                CppOptions.PrecompileSyntax, new OutputOption(
+                CppOptions.PrecompileSyntax,
+                new OutputOption(
                     "Precompile Syntax",
                     OutputOptionType.CheckBox,
                     "Use precompile headers for most build speed",
@@ -73,15 +74,12 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 )
             },
             {
-                CppOptions.OffsetsOnly, new OutputOption(
-                    "Offsets Only",
-                    OutputOptionType.CheckBox,
-                    "Only dump offsets in sdk",
-                    "false"
-                )
+                CppOptions.OffsetsOnly,
+                new OutputOption("Offsets Only", OutputOptionType.CheckBox, "Only dump offsets in sdk", "false")
             },
             {
-                CppOptions.LazyFindObject, new OutputOption(
+                CppOptions.LazyFindObject,
+                new OutputOption(
                     "Lazy Find Object",
                     OutputOptionType.CheckBox,
                     "Lazy assign for UObject::FindObject in SDK methods body",
@@ -89,7 +87,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 )
             },
             {
-                CppOptions.GenerateParametersFile, new OutputOption(
+                CppOptions.GenerateParametersFile,
+                new OutputOption(
                     "Generate Parameters File",
                     OutputOptionType.CheckBox,
                     "Should generate function parameters file",
@@ -97,7 +96,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 )
             },
             {
-                CppOptions.ShouldUseStrings, new OutputOption(
+                CppOptions.ShouldUseStrings,
+                new OutputOption(
                     "Should Use Strings",
                     OutputOptionType.CheckBox,
                     "Use string to catch function instead if use it's object index",
@@ -105,7 +105,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 )
             },
             {
-                CppOptions.ShouldXorStrings, new OutputOption(
+                CppOptions.ShouldXorStrings,
+                new OutputOption(
                     "Should Xor Strings",
                     OutputOptionType.CheckBox,
                     "Use XOR string to handle functions name",
@@ -113,12 +114,8 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 )
             },
             {
-                CppOptions.XorFuncName, new OutputOption(
-                    "Xor Func Name",
-                    OutputOptionType.TextBox,
-                    "XOR function name",
-                    "_xor_"
-                )
+                CppOptions.XorFuncName,
+                new OutputOption("Xor Func Name", OutputOptionType.TextBox, "XOR function name", "_xor_")
             },
         };
     }
@@ -751,13 +748,24 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                 {
                     Name = "UnknownData",
                     Type = "unsigned char",
-                    ArrayDim = $"0x{es.Size:X}"
+                    ArrayDim = $"0x{es.Size:X}",
                 }
             );
         }
 
         var sb = new StringBuilder();
-        sb.Append(_cppProcessor.GetFileHeader(null, "CG", null, null, null, null, string.Empty, out int indentLvl));
+        sb.Append(
+            _cppProcessor.GetFileHeader(
+                null,
+                "CG",
+                null,
+                null,
+                null,
+                null,
+                string.Empty,
+                out int indentLvl
+            )
+        );
         sb.Append(_cppProcessor.GenerateStructs(SdkFile.MissedStructs.ConvertAll(ConvertStruct), indentLvl, null));
         sb.Append(_cppProcessor.GetFileFooter("CG", string.Empty, ref indentLvl));
 
@@ -852,8 +860,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                     vcxprojString = await sr.ReadToEndAsync().ConfigureAwait(false);
                 }
 
-                vcxprojString = vcxprojString
-                    .Replace("{{CG_GAME_NAME}}", gameProjName)
+                vcxprojString = vcxprojString.Replace("{{CG_GAME_NAME}}", gameProjName)
                     .Replace("{{CG_GAME_NAME_UPPER}}", gameProjName.ToUpper());
 
                 // Write from begin
@@ -906,8 +913,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
                     vcxprojString = await sr.ReadToEndAsync().ConfigureAwait(false);
                 }
 
-                vcxprojString = vcxprojString
-                    .Replace("{{CG_GAME_NAME}}", gameProjName)
+                vcxprojString = vcxprojString.Replace("{{CG_GAME_NAME}}", gameProjName)
                     .Replace("{{CG_GAME_NAME_UPPER}}", gameProjName.ToUpper());
 
                 // Write from begin
@@ -936,11 +942,7 @@ public sealed class UnrealCpp : OutputPlugin<UnrealSdkFile>
 
             if (Status?.ProgressbarStatus is not null)
             {
-                await Status.ProgressbarStatus.Invoke(
-                        "",
-                        packCount,
-                        SdkFile.Packages.Count - packCount
-                    )
+                await Status.ProgressbarStatus.Invoke("", packCount, SdkFile.Packages.Count - packCount)
                     .ConfigureAwait(false);
             }
 
